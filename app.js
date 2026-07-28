@@ -4,10 +4,8 @@ const chatBody = document.querySelector(".chat-body");
 const chatForm = document.querySelector(".chat-form");
 
 // ================= GEMINI API =================
-const API_KEY = "AQ.Ab8RN6LqhjuTNO7slr0ldbcgx5C3m0NhrvFdV7D4OLi2h96a0w";
-
-const API_URL =
-"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
+const API_KEY = "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";
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const userData = {
     message: ""
 };
@@ -24,59 +22,49 @@ function createMessageElement(content, ...classes) {
 
 // ================= BOT RESPONSE =================
 
-async function generateBotResponse(incomingMessageDiv) {
+// ================= BOT RESPONSE =================
 
+async function generateBotResponse(incomingMessageDiv) {
     try {
 
         const response = await fetch(API_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-goog-api-key": API_KEY
+                "Authorization": `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-contents:[{
-parts :[
-    {
-        text: userData.message
-    }
-]
-}
-]
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                    {
+                        role: "user",
+                        content: userData.message
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 500
             })
         });
-
-
-
-        
-            
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error.message);
+            throw new Error(data.error?.message || "Something went wrong");
         }
 
-        const botReply =
-            data.candidates?.[0]?.content?.parts?.[0]?.text ||
-            "No response";
+        const botReply = data.choices[0].message.content;
 
         incomingMessageDiv.classList.remove("thinking");
-
         incomingMessageDiv.querySelector(".message-text").textContent = botReply;
 
     } catch (error) {
-
         incomingMessageDiv.classList.remove("thinking");
-
         incomingMessageDiv.querySelector(".message-text").textContent =
-            "Error : " + error.message;
+            "Error: " + error.message;
     }
 
     chatBody.scrollTop = chatBody.scrollHeight;
 }
-
-
 // ================= SEND MESSAGE =================
 
 function handleOutgoingMessage(e) {
